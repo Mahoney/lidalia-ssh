@@ -1,6 +1,6 @@
 package uk.org.lidalia.ssh
 
-import static uk.org.lidalia.ssh.Assert.shouldThrow
+import static uk.org.lidalia.test.Assert.shouldThrow
 import static org.junit.Assert.assertSame
 
 import org.junit.Test

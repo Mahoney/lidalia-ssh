@@ -26,7 +26,7 @@ class Command {
         }
     }
 
-    CommandResult run(Connection conn, int timeout = Connection.DEFAULT_TIMEOUT, TimeUnit timeUnit = Connection.DEFAULT_TIMEUNIT) throws CommandFailedException, TimeoutException {
+    CommandResult run(Connection conn, int timeout = Constants.DEFAULT_TIMEOUT, TimeUnit timeUnit = Constants.DEFAULT_TIMEUNIT) throws CommandFailedException, TimeoutException {
         return conn.run(this, timeout, timeUnit)
     }
 

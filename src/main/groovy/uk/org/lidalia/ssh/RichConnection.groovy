@@ -15,8 +15,8 @@ class RichConnection implements Connection {
     private final String serverURL
     private SSHConnection conn
 	
-	int defaultTimeout = DEFAULT_TIMEOUT
-	TimeUnit defaultTimeUnit = DEFAULT_TIMEUNIT
+	int defaultTimeout = Constants.DEFAULT_TIMEOUT
+	TimeUnit defaultTimeUnit = Constants.DEFAULT_TIMEUNIT
 
     RichConnection(String serverURL, String serverUsername, String serverPassword) {
         this.connection = new SSHConnection(serverURL, serverUsername, serverPassword)

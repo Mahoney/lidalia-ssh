@@ -15,7 +15,7 @@ class MockSSHConnection implements Connection {
         this.runner = runner
     }
 
-    CommandResult run(Command command, int timeout = DEFAULT_TIMEOUT, TimeUnit timeUnit = DEFAULT_TIMEUNIT) {
+    CommandResult run(Command command, int timeout = Constants.DEFAULT_TIMEOUT, TimeUnit timeUnit = Constants.DEFAULT_TIMEUNIT) {
         assert connected
         runner.run(command, timeout, timeUnit)
     }

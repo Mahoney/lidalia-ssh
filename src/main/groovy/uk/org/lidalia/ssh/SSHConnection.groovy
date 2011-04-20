@@ -53,7 +53,7 @@ class SSHConnection implements uk.org.lidalia.ssh.Connection {
         return conn != null
     }
 
-    CommandResult run(Command command, int timeout = DEFAULT_TIMEOUT, TimeUnit timeUnit = DEFAULT_TIMEUNIT) throws CommandFailedException, CommandInterruptedException, CommandTimeoutException {
+    CommandResult run(Command command, int timeout = Constants.DEFAULT_TIMEOUT, TimeUnit timeUnit = Constants.DEFAULT_TIMEUNIT) throws CommandFailedException, CommandInterruptedException, CommandTimeoutException {
         Session session
 		String stdOutput
         String errorOutput

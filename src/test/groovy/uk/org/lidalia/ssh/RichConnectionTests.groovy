@@ -2,9 +2,9 @@ package uk.org.lidalia.ssh
 
 import static java.util.concurrent.TimeUnit.HOURS
 
-import static uk.org.lidalia.ssh.Assert.shouldThrow
-import static uk.org.lidalia.ssh.Connection.DEFAULT_TIMEUNIT
-import static uk.org.lidalia.ssh.Connection.DEFAULT_TIMEOUT
+import static uk.org.lidalia.test.Assert.shouldThrow
+import static uk.org.lidalia.ssh.Constants.DEFAULT_TIMEUNIT
+import static uk.org.lidalia.ssh.Constants.DEFAULT_TIMEOUT
 import static org.junit.Assert.assertSame
 
 import org.junit.Test

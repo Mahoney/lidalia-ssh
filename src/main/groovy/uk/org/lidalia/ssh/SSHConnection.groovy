@@ -31,6 +31,7 @@ class SSHConnection implements uk.org.lidalia.ssh.Connection {
         conn.connect();
         boolean authenticated = conn.authenticateWithPassword(serverUsername, serverPassword);
         if (!authenticated) {
+			close()
             throw new IOException("Authentication failed for $serverUsername on $serverURL");
         }
     }

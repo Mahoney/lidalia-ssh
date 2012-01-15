@@ -2,17 +2,23 @@ package uk.org.lidalia.ssh
 
 import static uk.org.lidalia.test.Assert.shouldThrow
 import static org.junit.Assert.assertSame
+import static org.mockito.Mockito.mock
+import static org.mockito.Mockito.when
+import static org.mockito.Mockito.inOrder
+import static org.mockito.Mockito.verify
+import static org.mockito.Mockito.atLeastOnce
 
+import org.junit.After;
 import org.junit.Test
-import org.gmock.WithGMock
+import org.junit.runner.RunWith
 
-import uk.org.lidalia.ssh.Command;
-import uk.org.lidalia.ssh.CommandFailedException;
-import uk.org.lidalia.ssh.CommandResult;
-import uk.org.lidalia.ssh.ExitStatus;
-import uk.org.lidalia.ssh.CommandInterruptedException;
-import uk.org.lidalia.ssh.SSHConnection;
-import uk.org.lidalia.ssh.CommandTimeoutException;
+import uk.org.lidalia.ssh.Command
+import uk.org.lidalia.ssh.CommandFailedException
+import uk.org.lidalia.ssh.CommandResult
+import uk.org.lidalia.ssh.ExitStatus
+import uk.org.lidalia.ssh.CommandInterruptedException
+import uk.org.lidalia.ssh.SSHConnection
+import uk.org.lidalia.ssh.CommandTimeoutException
 
 import ch.ethz.ssh2.Connection
 import static org.junit.Assert.assertTrue
@@ -21,150 +27,175 @@ import ch.ethz.ssh2.SCPClient
 import ch.ethz.ssh2.Session
 import java.util.concurrent.TimeUnit
 
-@WithGMock
 class SSHConnectionTests {
 
-
-    Connection connMock
-    Session sessionMock
+	Connection connMock = mock(Connection)
+    Session sessionMock = mock(Session)
     SSHConnection sshConnection = new SSHConnection('url', 'user', 'password')
+	SCPClient scpClientMock = mock(SCPClient)
+	
+	@After
+	void resetConstructors() {
+		Connection.metaClass = null
+		SCPClient.metaClass = null
+	}
+	
+	private void expectConnectionToBeOpened() {
+		Connection.metaClass.constructor = { String host ->
+			return connMock
+		}
+		when(connMock.authenticateWithPassword('user', 'password')).thenReturn(true)
+	}
+	
+	@Test
+	void connectConnects() {
+		expectConnectionToBeOpened()
 
-    @Test
-    void connectConnects() {
-        expectConnectionToBeOpened()
+		sshConnection.open()
+		
+		def inOrder = inOrder(connMock)
+		inOrder.verify(connMock).connect()
+		inOrder.verify(connMock).authenticateWithPassword('user', 'password')
+		assert sshConnection.connected
+	}
+	
+	@Test
+	void connectWithInvalidPassword() {
+		sshConnection = new SSHConnection('url', 'user', 'wrongpass')
+		expectConnectionToBeOpened()
 
-        play {
-            sshConnection.open()
-            assertTrue(sshConnection.connected)
-        }
-    }
-
-    private void expectConnectionToBeOpened() {
-        connMock = mock(Connection, constructor('url'))
-        connMock.connect()
-        connMock.authenticateWithPassword('user', 'password').returns(true)
-        sessionMock = mock(Session)
-        connMock.openSession().returns(sessionMock).atMostOnce()
-    }
+		def exception = shouldThrow(IOException) {
+			sshConnection.open()
+		}
+		
+		def inOrder = inOrder(connMock)
+		inOrder.verify(connMock).connect()
+		inOrder.verify(connMock).close()
+		assert !sshConnection.connected
+		assert "Authentication failed for user on url" == exception.message
+	}
 
     @Test
     void closeWorksOnClosedConnection() {
         sshConnection.close()
-        assertFalse(sshConnection.connected)
+		
+		assert !sshConnection.connected
     }
 
     @Test
     void closeWorksOnOpenConnection() {
         expectConnectionToBeOpened()
-        connMock.close()
 
-        play {
-            sshConnection.open()
-            sshConnection.close()
-            assertFalse(sshConnection.connected)
-        }
+        sshConnection.open()
+        sshConnection.close()
+
+		verify(connMock).close()
+        assert !sshConnection.connected
     }
 
     @Test
     void putCallsScpClient() {
         expectConnectionToBeOpened()
+		SCPClient.metaClass.constructor = { Connection conn ->
+			assert conn == connMock
+			return scpClientMock
+		}
 
-        SCPClient scpClientMock = mock(SCPClient, constructor(connMock))
-        scpClientMock.put("src", "target", "0777")
+        sshConnection.open()
+        sshConnection.put("src", "target")
 
-        play {
-            sshConnection.open()
-            sshConnection.put("src", "target")
-        }
-
+		verify(scpClientMock).put("src", "target", "0777")
     }
 
     @Test void runReturnsCommandResult() {
         expectConnectionToBeOpened()
+		when(connMock.openSession()).thenReturn(sessionMock)
         expectCommandToReturn('grep "blah"', 'stdout', 'stderr', 0)
-        sessionMock.close()
 
-        play {
-            sshConnection.open()
-            Command command = new Command('grep "blah"')
-            CommandResult result = sshConnection.run(command)
-            assertSame command, result.command
-            assert 'stdout' == result.out
-            assert 'stderr' == result.err
-            assert new ExitStatus(0) == result.exitStatus
-        }
+        sshConnection.open()
+        def command = new Command('grep "blah"')
+        def result = sshConnection.run(command)
+		
+        assert command.is(result.command)
+        assert 'stdout' == result.out
+        assert 'stderr' == result.err
+        assert new ExitStatus(0) == result.exitStatus
+		verify(sessionMock).execCommand('grep "blah"')
+		verify(sessionMock).close()
     }
 
     @Test void runThrowsCommandFailedException() {
         expectConnectionToBeOpened()
+		when(connMock.openSession()).thenReturn(sessionMock)
         expectCommandToReturn('grep "blah"', 'stdout', 'stderr', 5)
-        sessionMock.close().atLeastOnce()
 
-        play {
-            sshConnection.open()
-            Command command = new Command('grep "blah"')
-            CommandFailedException commandFailedException = shouldThrow(CommandFailedException) {
-                sshConnection.run(command)
-            }
-            CommandResult result = commandFailedException.result
-            assertSame command, result.command
-            assert 'stdout' == result.out
-            assert 'stderr' == result.err
-            assert new ExitStatus(5) == result.exitStatus
+        sshConnection.open()
+        def command = new Command('grep "blah"')
+        def commandFailedException = shouldThrow(CommandFailedException) {
+            sshConnection.run(command)
         }
+        def result = commandFailedException.result
+		
+		assert result.command.is(command)
+        assert 'stdout' == result.out
+        assert 'stderr' == result.err
+        assert new ExitStatus(5) == result.exitStatus
+		verify(sessionMock).execCommand('grep "blah"')
+		verify(sessionMock).close()
     }
 
     @Test void runThrowsTimedoutException() {
         expectConnectionToBeOpened()
+		when(connMock.openSession()).thenReturn(sessionMock)
         expectCommandToReturn('grep "blah"', 'stdout', 'stderr', null)
-        sessionMock.close().atLeastOnce()
 
-        play {
-            sshConnection.open()
-            Command command = new Command('grep "blah"')
-            CommandTimeoutException timedoutCommandException = shouldThrow(CommandTimeoutException) {
-                sshConnection.run(command, 1, TimeUnit.MILLISECONDS)
-            }
-            CommandResult result = timedoutCommandException.result
-            assertSame command, result.command
-            assert 'stdout' == result.out
-            assert 'stderr' == result.err
-            assert result.exitStatus == null
-            assert timedoutCommandException.timeout == 1
-            assert timedoutCommandException.timeUnit == TimeUnit.MILLISECONDS
+        sshConnection.open()
+        def command = new Command('grep "blah"')
+        def timedoutCommandException = shouldThrow(CommandTimeoutException) {
+            sshConnection.run(command, 1, TimeUnit.MILLISECONDS)
         }
+        def result = timedoutCommandException.result
+		
+		assert result.command.is(command)
+        assert 'stdout' == result.out
+        assert 'stderr' == result.err
+        assert result.exitStatus == null
+        assert timedoutCommandException.timeout == 1
+        assert timedoutCommandException.timeUnit == TimeUnit.MILLISECONDS
+		verify(sessionMock).execCommand('grep "blah"')
+		verify(sessionMock, atLeastOnce()).close()
     }
 
     @Test void runThrowsInterruptedException() {
         expectConnectionToBeOpened()
+		when(connMock.openSession()).thenReturn(sessionMock)
         expectCommandToReturn('grep "blah"', 'stdout', 'stderr', null)
-        sessionMock.close().atLeastOnce()
 
-        Command command = new Command('grep "blah"')
+        def command = new Command('grep "blah"')
         CommandInterruptedException interruptedException = null
         def thread = Thread.start {
-            play {
-                sshConnection.open()
-                interruptedException = shouldThrow(CommandInterruptedException) {
-                    sshConnection.run(command)
-                }
+            sshConnection.open()
+            interruptedException = shouldThrow(CommandInterruptedException) {
+                sshConnection.run(command)
             }
         }
         Thread.sleep(50L)
         thread.interrupt()
         Thread.sleep(50L)
 
-        CommandResult result = interruptedException.result
-        assertSame command, result.command
+        def result = interruptedException.result
+		
+		assert result.command.is(command)
         assert 'stdout' == result.out
         assert 'stderr' == result.err
         assert result.exitStatus == null
+		verify(sessionMock).execCommand('grep "blah"')
+		verify(sessionMock, atLeastOnce()).close()
     }
 
     private void expectCommandToReturn(String commandString, String stdout, String stderr, Integer status) {
-        sessionMock.execCommand(commandString)
-        sessionMock.stdout.returns(new ByteArrayInputStream(stdout.bytes))
-        sessionMock.stderr.returns(new ByteArrayInputStream(stderr.bytes))
-        sessionMock.exitStatus.returns(status).stub()
+        when(sessionMock.stdout).thenReturn(new ByteArrayInputStream(stdout.bytes))
+        when(sessionMock.stderr).thenReturn(new ByteArrayInputStream(stderr.bytes))
+        when(sessionMock.exitStatus).thenReturn(status)
     }
 }

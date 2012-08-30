@@ -6,7 +6,6 @@
     <groupId>uk.org.lidalia</groupId>
     <artifactId>groovy-module</artifactId>
     <version>1.0.0-SNAPSHOT</version>
-    <relativePath>../groovy-module</relativePath>
   </parent>
   <artifactId>lidalia-ssh</artifactId>
   <version>1.0.0-SNAPSHOT</version>

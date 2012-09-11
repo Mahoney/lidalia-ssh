@@ -1,6 +1,6 @@
 package uk.org.lidalia.ssh
 
-import static uk.org.lidalia.test.Assert.shouldThrow
+import static uk.org.lidalia.test.ShouldThrow.shouldThrow
 import static org.junit.Assert.assertSame
 import static org.mockito.Mockito.mock
 import static org.mockito.Mockito.when
@@ -33,32 +33,32 @@ class SSHConnectionTests {
     Session sessionMock = mock(Session)
     SSHConnection sshConnection = new SSHConnection('url', 'user', 'password')
 	SCPClient scpClientMock = mock(SCPClient)
-	
+
 	@After
 	void resetConstructors() {
 		Connection.metaClass = null
 		SCPClient.metaClass = null
 	}
-	
+
 	private void expectConnectionToBeOpened() {
 		Connection.metaClass.constructor = { String host ->
 			return connMock
 		}
 		when(connMock.authenticateWithPassword('user', 'password')).thenReturn(true)
 	}
-	
+
 	@Test
 	void connectConnects() {
 		expectConnectionToBeOpened()
 
 		sshConnection.open()
-		
+
 		def inOrder = inOrder(connMock)
 		inOrder.verify(connMock).connect()
 		inOrder.verify(connMock).authenticateWithPassword('user', 'password')
 		assert sshConnection.connected
 	}
-	
+
 	@Test
 	void connectWithInvalidPassword() {
 		sshConnection = new SSHConnection('url', 'user', 'wrongpass')
@@ -67,7 +67,7 @@ class SSHConnectionTests {
 		def exception = shouldThrow(IOException) {
 			sshConnection.open()
 		}
-		
+
 		def inOrder = inOrder(connMock)
 		inOrder.verify(connMock).connect()
 		inOrder.verify(connMock).close()
@@ -78,7 +78,7 @@ class SSHConnectionTests {
     @Test
     void closeWorksOnClosedConnection() {
         sshConnection.close()
-		
+
 		assert !sshConnection.connected
     }
 
@@ -115,7 +115,7 @@ class SSHConnectionTests {
         sshConnection.open()
         def command = new Command('grep "blah"')
         def result = sshConnection.run(command)
-		
+
         assert command.is(result.command)
         assert 'stdout' == result.out
         assert 'stderr' == result.err
@@ -135,7 +135,7 @@ class SSHConnectionTests {
             sshConnection.run(command)
         }
         def result = commandFailedException.result
-		
+
 		assert result.command.is(command)
         assert 'stdout' == result.out
         assert 'stderr' == result.err
@@ -155,7 +155,7 @@ class SSHConnectionTests {
             sshConnection.run(command, 1, TimeUnit.MILLISECONDS)
         }
         def result = timedoutCommandException.result
-		
+
 		assert result.command.is(command)
         assert 'stdout' == result.out
         assert 'stderr' == result.err
@@ -184,7 +184,7 @@ class SSHConnectionTests {
         Thread.sleep(50L)
 
         def result = interruptedException.result
-		
+
 		assert result.command.is(command)
         assert 'stdout' == result.out
         assert 'stderr' == result.err

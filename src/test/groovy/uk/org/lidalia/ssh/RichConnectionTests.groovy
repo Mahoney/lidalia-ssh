@@ -2,7 +2,7 @@ package uk.org.lidalia.ssh
 
 import static java.util.concurrent.TimeUnit.HOURS
 
-import static uk.org.lidalia.test.Assert.shouldThrow
+import static uk.org.lidalia.test.ShouldThrow.shouldThrow
 import static uk.org.lidalia.ssh.Constants.DEFAULT_TIMEUNIT
 import static uk.org.lidalia.ssh.Constants.DEFAULT_TIMEOUT
 import static org.junit.Assert.assertSame
@@ -87,7 +87,7 @@ class RichConnectionTests {
         Command command = new Command(commandString)
         when(runner.run(command, DEFAULT_TIMEOUT, DEFAULT_TIMEUNIT)).thenReturn(result)
 
-        
+
         assert !connectionMock.connected
         assertSame result, richConnection.run(command)
         assert !connectionMock.connected
@@ -98,7 +98,7 @@ class RichConnectionTests {
         Command command = new Command(commandString)
 		when(runner.run(command, DEFAULT_TIMEOUT, DEFAULT_TIMEUNIT)).thenReturn(result)
         connectionMock.connected = true
-		
+
         assertSame result, richConnection.run(command)
         assert connectionMock.connected
     }
@@ -118,7 +118,7 @@ class RichConnectionTests {
         CommandResult result = success('string result')
 		when(runner.run(command, DEFAULT_TIMEOUT, DEFAULT_TIMEUNIT)).thenReturn(result)
         connectionMock.connected = true
-		
+
         assert 'string result' == richConnection.run(commandString)
         assert connectionMock.connected
     }
@@ -145,18 +145,18 @@ class RichConnectionTests {
 
     @Test void putOpensAndClosesConnectionIfClosedAndRunsCommand() {
         assert !connectionMock.connected
-		
+
         richConnection.put('src', 'target')
-		
+
         assert !connectionMock.connected
 		verify(runner).put('src', 'target')
     }
 
     @Test void putDoesNotOpenOrCloseConnectionIfOpenAndRunsCommand() {
         connectionMock.connected = true
-        
+
         richConnection.put('src', 'target')
-		
+
         assert connectionMock.connected
 		verify(runner).put('src', 'target')
     }
@@ -164,9 +164,9 @@ class RichConnectionTests {
     @Test void putAsUserOpensAndClosesConnectionIfClosedAndRunsCommand() {
         when(runner.run(any(Command), eq(DEFAULT_TIMEOUT), eq(DEFAULT_TIMEUNIT))).thenReturn(success())
         assert !connectionMock.connected
-		
+
         richConnection.put('/dir/src', '/dir/target', 'root')
-		
+
         assert !connectionMock.connected
 		verify(runner).put('/dir/src', '/tmp')
 		verify(runner).run(new Command("cp /tmp/src /dir/target", ROOT), DEFAULT_TIMEOUT, DEFAULT_TIMEUNIT)
@@ -176,9 +176,9 @@ class RichConnectionTests {
     @Test void putAsUserDoesNotOpenOrCloseConnectionIfOpenAndRunsCommand() {
 		when(runner.run(any(Command), eq(DEFAULT_TIMEOUT), eq(DEFAULT_TIMEUNIT))).thenReturn(success())
         connectionMock.connected = true
-		
+
 		richConnection.put('/dir/src', '/dir/target', 'root')
-		
+
         assert connectionMock.connected
 		verify(runner).put('/dir/src', '/tmp')
 		verify(runner).run(new Command("cp /tmp/src /dir/target", ROOT), DEFAULT_TIMEOUT, DEFAULT_TIMEUNIT)
@@ -190,7 +190,7 @@ class RichConnectionTests {
         Command command = new Command(commandString)
         when(runner.run(command, DEFAULT_TIMEOUT, DEFAULT_TIMEUNIT)).thenReturn(result)
 
-        
+
         assertSame result, richConnection.run(command)
     }
 
@@ -236,7 +236,7 @@ class RichConnectionTests {
         assert 'string result' == richConnection.run(commandString, 'me', 5, HOURS)
         assert !connectionMock.connected
     }
-	
+
 	private CommandResult success(String stdout = '') {
 		return new CommandResult(null, new ExitStatus(0), stdout, '', 1L)
 	}

@@ -1,31 +1,19 @@
 package uk.org.lidalia.ssh
 
-import static uk.org.lidalia.test.ShouldThrow.shouldThrow
-import static org.junit.Assert.assertSame
-import static org.mockito.Mockito.mock
-import static org.mockito.Mockito.when
-import static org.mockito.Mockito.inOrder
-import static org.mockito.Mockito.verify
-import static org.mockito.Mockito.atLeastOnce
-
-import org.junit.After;
-import org.junit.Test
-import org.junit.runner.RunWith
-
-import uk.org.lidalia.ssh.Command
-import uk.org.lidalia.ssh.CommandFailedException
-import uk.org.lidalia.ssh.CommandResult
-import uk.org.lidalia.ssh.ExitStatus
-import uk.org.lidalia.ssh.CommandInterruptedException
-import uk.org.lidalia.ssh.SSHConnection
-import uk.org.lidalia.ssh.CommandTimeoutException
-
 import ch.ethz.ssh2.Connection
-import static org.junit.Assert.assertTrue
-import static org.junit.Assert.assertFalse
 import ch.ethz.ssh2.SCPClient
 import ch.ethz.ssh2.Session
+import org.junit.After
+import org.junit.Test
+
 import java.util.concurrent.TimeUnit
+
+import static org.mockito.Mockito.atLeastOnce
+import static org.mockito.Mockito.inOrder
+import static org.mockito.Mockito.mock
+import static org.mockito.Mockito.verify
+import static org.mockito.Mockito.when
+import static uk.org.lidalia.test.ShouldThrow.shouldThrow
 
 class SSHConnectionTests {
 

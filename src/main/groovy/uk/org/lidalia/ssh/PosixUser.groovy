@@ -1,8 +1,8 @@
 package uk.org.lidalia.ssh
 
-import uk.org.lidalia.lang.WrappedString
+import uk.org.lidalia.lang.WrappedValue
 
-class PosixUser extends WrappedString {
+class PosixUser extends WrappedValue {
 
     PosixUser(String userName) {
         super(userName)

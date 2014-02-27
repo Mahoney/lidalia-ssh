@@ -15,12 +15,6 @@ import static org.mockito.Matchers.eq
 import org.junit.Test
 import org.junit.Before
 
-import uk.org.lidalia.ssh.Command;
-import uk.org.lidalia.ssh.CommandResult;
-import uk.org.lidalia.ssh.ExitStatus;
-import uk.org.lidalia.ssh.PosixUser;
-import uk.org.lidalia.ssh.RichConnection;
-
 class RichConnectionTests {
 
 	static final PosixUser ROOT = new PosixUser('root')
@@ -61,24 +55,26 @@ class RichConnectionTests {
     @Test void remoteClosesConnectionOnExceptionIfClosedAtStart() {
         Throwable toThrow = new Throwable()
         assert !connectionMock.connected
-        shouldThrow(toThrow) {
+        Throwable thrown = shouldThrow(Throwable) {
             richConnection.remote {
                 assert connectionMock.connected
                 throw toThrow
             }
         }
+        assert thrown == toThrow
         assert !connectionMock.connected
     }
 
     @Test void remoteLeavesConnectionOpenOnExceptionIfOpenAtStart() {
         connectionMock.connected = true
         Throwable toThrow = new Throwable()
-        shouldThrow(toThrow) {
+        Throwable thrown = shouldThrow(Throwable) {
             richConnection.remote {
                 assert connectionMock.connected
                 throw toThrow
             }
         }
+        assert thrown == toThrow
         assert connectionMock.connected
     }
 

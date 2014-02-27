@@ -2,7 +2,7 @@ package uk.org.lidalia.ssh
 
 import uk.org.lidalia.lang.WrappedValue
 
-class ExitStatus extends WrappedValue<Integer> {
+class ExitStatus extends WrappedValue {
 
     private final int exitStatus
 
